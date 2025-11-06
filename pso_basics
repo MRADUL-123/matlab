@@ -1,0 +1,67 @@
+clc; clear; close all;
+% ------------ Basic Particle Swarm Optimization ------------
+funcChoice = 6;          % choose test function (1–10) from testfunctions.m
+dim        = 2;          % number of variables
+nPop       = 50;         % swarm size
+maxIter    = 200;        % iterations
+
+% bounds (vector form)
+lb = -5 * ones(1,dim);
+ub =  5 * ones(1,dim);
+
+% PSO parameters
+w  = 0.7;    % inertia
+c1 = 2.0;    % cognitive
+c2 = 2.0;    % social
+
+% ------------ Initialization ------------
+pos  = lb + (ub-lb).*rand(nPop,dim);
+vel  = zeros(nPop,dim);
+pbest = pos;
+
+pbestVal = zeros(nPop,1);
+for i = 1:nPop
+    pbestVal(i) = testfunctions(pbest(i,:), funcChoice);
+end
+[gbestVal, idx] = min(pbestVal);
+gbest = pbest(idx,:);
+
+bestHistory = zeros(maxIter,1);
+
+% ------------ Main Loop ------------
+for it = 1:maxIter
+    for i = 1:nPop
+        r1 = rand(1,dim); r2 = rand(1,dim);
+
+        % velocity & position update
+        vel(i,:) = w*vel(i,:) ...
+                 + c1.*r1.*(pbest(i,:) - pos(i,:)) ...
+                 + c2.*r2.*(gbest      - pos(i,:));
+        pos(i,:) = pos(i,:) + vel(i,:);
+
+        % keep inside bounds
+        pos(i,:) = max(pos(i,:), lb);
+        pos(i,:) = min(pos(i,:), ub);
+
+        % evaluate
+        val = testfunctions(pos(i,:), funcChoice);
+
+        % update personal/global bests
+        if val < pbestVal(i)
+            pbestVal(i) = val;
+            pbest(i,:)  = pos(i,:);
+            if val < gbestVal
+                gbestVal = val; gbest = pos(i,:);
+            end
+        end
+    end
+
+    bestHistory(it) = gbestVal;
+    fprintf('Iter %3d | Best = %.6f\n', it, gbestVal);
+end
+
+% ------------ Plot ------------
+figure('Name','Convergence - Basic PSO','NumberTitle','off');
+plot(bestHistory,'LineWidth',2);
+xlabel('Iteration'); ylabel('Best Fitness');
+title('Convergence - Basic PSO'); grid on; drawnow;
