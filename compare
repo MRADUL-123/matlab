@@ -1,0 +1,21 @@
+clc; close all;
+
+% --- run BASIC and stash its history
+pso_basic;                     % creates 'bestHistory'
+bh_basic = bestHistory;        %#ok<NASGU>
+save('bh_basic_tmp.mat','bh_basic');   % persist across 'clear'
+
+% --- run HYBRID and keep its history
+pso_hybrid;                    % creates 'bestHistory' again
+bh_hybrid = bestHistory;
+
+% --- restore basic history (because pso_hybrid cleared workspace)
+load('bh_basic_tmp.mat','bh_basic');
+
+% --- plot both
+figure('Name','Basic vs Hybrid PSO','NumberTitle','off');
+plot(bh_basic,'LineWidth',2); hold on;
+plot(bh_hybrid,'r','LineWidth',2);
+xlabel('Iteration'); ylabel('Best Fitness');
+title('Basic vs Hybrid PSO - Convergence');
+legend('Basic PSO','Hybrid PSO'); grid on;
