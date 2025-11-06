@@ -55,6 +55,8 @@ for it = 1:maxIter
             end
         end
     end
+%fprintf('Iter %3d | Best=%.6f | gbest=%s\n', it, gbestVal, mat2str(gbest,4));
+
 
     bestHistory(it) = gbestVal;
     fprintf('Iter %3d | Best = %.6f\n', it, gbestVal);
