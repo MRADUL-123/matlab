@@ -1,0 +1,66 @@
+clc; clear; close all;
+% --------- Hybrid / Accelerated Particle Swarm Optimization ---------
+funcChoice = 6;     % pick from testfunctions.m (1–10)
+dim        = 2;
+nPop       = 50;
+maxIter    = 200;
+
+lb = -5 * ones(1,dim);
+ub =  5 * ones(1,dim);
+
+% dynamic inertia
+wMax = 0.9;  wMin = 0.4;
+c1   = 2.0;  c2   = 2.0;
+
+% Init
+pos = lb + (ub-lb).*rand(nPop,dim);
+vel = zeros(nPop,dim);
+pbest = pos;
+
+pbestVal = zeros(nPop,1);
+for i=1:nPop
+    pbestVal(i) = testfunctions(pbest(i,:), funcChoice);
+end
+[gbestVal, idx] = min(pbestVal);
+gbest = pbest(idx,:);
+
+bestHistory = zeros(maxIter,1);
+chaos = rand;  % seed for logistic map
+
+for it = 1:maxIter
+    % inertia decreases linearly
+    w = wMax - (wMax - wMin) * (it / maxIter);
+
+    % logistic map for chaotic factor in (0,1)
+    chaos = 4*chaos*(1-chaos);
+    gamma = chaos;
+
+    for i=1:nPop
+        r1 = rand(1,dim); r2 = rand(1,dim);
+
+        vel(i,:) = w*vel(i,:) + gamma*( ...
+                    c1.*r1.*(pbest(i,:) - pos(i,:)) + ...
+                    c2.*r2.*(gbest      - pos(i,:)) );
+
+        pos(i,:) = pos(i,:) + vel(i,:);
+        pos(i,:) = max(pos(i,:), lb);
+        pos(i,:) = min(pos(i,:), ub);
+
+        val = testfunctions(pos(i,:), funcChoice);
+
+        if val < pbestVal(i)
+            pbestVal(i) = val;  pbest(i,:) = pos(i,:);
+            if val < gbestVal
+                gbestVal = val; gbest = pos(i,:);
+            end
+        end
+    end
+
+    bestHistory(it) = gbestVal;
+    fprintf('Iter %3d | Best = %.6f | w=%.3f gamma=%.3f\n', it, gbestVal, w, gamma);
+end
+
+figure('Name','Convergence - Hybrid PSO','NumberTitle','off');
+plot(bestHistory,'r','LineWidth',2);
+xlabel('Iteration'); ylabel('Best Fitness');
+title('Convergence - Hybrid PSO'); grid on; drawnow;
